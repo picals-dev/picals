@@ -1,0 +1,37 @@
+@import 'tailwindcss';
+
+@plugin './hero.ts';
+
+@source '../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-primary: oklch(63.973% 0.17512 248.69);
+
+  --color-primary-100: oklch(84.221% 0.08872 238.6);
+  --color-primary-200: oklch(78.817% 0.12023 239.75);
+  --color-primary-300: oklch(73.913% 0.14777 242.1);
+  --color-primary-400: oklch(69.327% 0.17168 246.01);
+  --color-primary-500: oklch(63.973% 0.17512 248.69);
+  --color-primary-600: oklch(54.668% 0.14861 248.4);
+  --color-primary-700: oklch(45.193% 0.11977 247.34);
+  --color-primary-800: oklch(34.928% 0.09028 246.23);
+  --color-primary-900: oklch(24.131% 0.05708 241.83);
+
+  --color-error: oklch(0.96 0.022 24.44);
+
+  --color-error-0: oklch(0.96 0.022 24.44);
+  --color-error-1: oklch(0.82 0.099566 21.7035);
+  --color-error-2: oklch(0.75 0.1536 20.96);
+  --color-error-3: oklch(0.66 0.217 24.44);
+  --color-error-4: oklch(0.55 0.2051 24.53);
+
+  --color-text: oklch(0.16 0.0413 254.41 / 53.33%);
+
+  --color-text-0: oklch(0.16 0.0413 254.41 / 53.33%);
+  --color-text-1: oklch(0.57 0 0);
+  --color-text-2: oklch(0.51 0 0);
+  --color-text-3: oklch(0.42 0 0);
+  --color-text-4: oklch(0.26 0 0);
+}
