@@ -34,19 +34,18 @@ enum TagKind {
 
 // 用户
 model User {
-  id        String  @id @default(cuid())
-  handle    String  @unique
-  email     String  @unique
-  name      String?
-  avatarUrl String?
-  coverUrl  String? // 个人空间头图
-  bio       String?
+  id            String   @id @default(cuid())
+  name          String?
+  email         String   @unique
+  emailVerified Boolean
+  image         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  role      Role      @default(USER)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-
+  coverUrl    String? // 个人空间头图
+  bio         String?
+  role        Role         @default(USER)
+  deletedAt   DateTime?
   collections Collection[] // 个人图单（收藏夹）
   comments    Comment[]
   likes       Like[] // 点赞
@@ -54,7 +53,60 @@ model User {
   following   Follow[]     @relation("following")
   followers   Follow[]     @relation("followers")
 
+  sessions Session[]
+  accounts Account[]
+
   @@index([deletedAt])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  userId                String
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  idToken               String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
 }
 
 // 关注
