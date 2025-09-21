@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../app/generated/prisma"
 }
 
 datasource db {
@@ -33,7 +32,6 @@ enum TagKind {
   STYLE
 }
 
-// ---------- Users & Social ----------
 // 用户
 model User {
   id        String  @id @default(cuid())
@@ -72,7 +70,6 @@ model Follow {
   @@index([followingId])
 }
 
-// ---------- Pixiv 作者 ----------
 model Artist {
   id          String  @id @default(cuid())
   // Pixiv 作者唯一标识
@@ -94,7 +91,6 @@ model Artist {
   @@index([account])
 }
 
-// ---------- 作品（对应 Pixiv 一条插画/漫画作品，可能有多页） ----------
 model Work {
   id            String     @id @default(cuid())
   // Pixiv 作品 ID（强唯一）
@@ -133,7 +129,6 @@ model Work {
   @@index([isR18, postedAt])
 }
 
-// ---------- 对象存储中的图片资产（R2） ----------
 model Asset {
   id     String @id @default(cuid())
   workId String
@@ -164,7 +159,6 @@ model Asset {
   @@index([phash])
 }
 
-// ---------- 标签（带别名，统一归到主标签） ----------
 model Tag {
   id   String  @id @default(cuid())
   name String  @unique // 平台“规范名”（中文优先）
@@ -217,7 +211,6 @@ model TagExternal {
   @@index([raw])
 }
 
-// ---------- 图单（收藏者的歌单式组织，显式顺序） ----------
 model Collection {
   id          String  @id @default(cuid())
   name        String
@@ -251,7 +244,6 @@ model CollectionItem {
   @@index([workId])
 }
 
-// ---------- 互动 ----------
 model Like {
   userId    String
   workId    String
@@ -279,7 +271,6 @@ model View {
   @@index([lastViewedAt])
 }
 
-// ---------- 评论（线程化：rootId + parentId） ----------
 model Comment {
   id String @id @default(cuid())
 
