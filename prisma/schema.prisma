@@ -1,0 +1,313 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  MOD
+  ADMIN
+}
+
+enum WorkStatus {
+  PUBLISHED
+  REMOVED
+}
+
+enum AssetKind {
+  ORIGINAL
+  PREVIEW
+  THUMB
+}
+
+enum TagKind {
+  GENERAL
+  CHARACTER
+  SERIES
+  ARTIST
+  STYLE
+}
+
+// ---------- Users & Social ----------
+// 用户
+model User {
+  id        String  @id @default(cuid())
+  handle    String  @unique
+  email     String  @unique
+  name      String?
+  avatarUrl String?
+  coverUrl  String? // 个人空间头图
+  bio       String?
+
+  role      Role      @default(USER)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  collections Collection[] // 个人图单（收藏夹）
+  comments    Comment[]
+  likes       Like[] // 点赞
+  views       View[] // 最近浏览
+  following   Follow[]     @relation("following")
+  followers   Follow[]     @relation("followers")
+
+  @@index([deletedAt])
+}
+
+// 关注
+model Follow {
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("following", fields: [followerId], references: [id])
+  following User @relation("followers", fields: [followingId], references: [id])
+
+  @@id([followerId, followingId])
+  @@index([followingId])
+}
+
+// ---------- Pixiv 作者 ----------
+model Artist {
+  id          String  @id @default(cuid())
+  // Pixiv 作者唯一标识
+  pixivUserId Int     @unique
+  // Pixiv 展示名与账号（account 通常是罗马字母）
+  name        String
+  account     String?
+  avatarUrl   String?
+  homePage    String? // https://www.pixiv.net/users/xxxxx
+
+  bio       String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  works Work[]
+
+  @@index([name])
+  @@index([account])
+}
+
+// ---------- 作品（对应 Pixiv 一条插画/漫画作品，可能有多页） ----------
+model Work {
+  id            String     @id @default(cuid())
+  // Pixiv 作品 ID（强唯一）
+  pixivIllustId Int        @unique
+  title         String
+  description   String?
+  status        WorkStatus @default(PUBLISHED)
+
+  // 原作者（来自 Pixiv）
+  authorId String
+  author   Artist @relation(fields: [authorId], references: [id])
+
+  // Pixiv 原链接与时间信息（方便溯源/排序）
+  sourceUrl  String // https://www.pixiv.net/artworks/xxxxxx
+  postedAt   DateTime? // Pixiv 上的发布时间（解析自接口）
+  totalPages Int       @default(1)
+  isR18      Boolean   @default(false)
+
+  // 主图尺寸（通常取第 1 页原图）
+  primaryWidth  Int?
+  primaryHeight Int?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  assets          Asset[]
+  tags            WorkTag[]
+  comments        Comment[]
+  likes           Like[]
+  views           View[]
+  collectionItems CollectionItem[]
+
+  @@index([authorId])
+  @@index([postedAt])
+  @@index([isR18, postedAt])
+}
+
+// ---------- 对象存储中的图片资产（R2） ----------
+model Asset {
+  id     String @id @default(cuid())
+  workId String
+  work   Work   @relation(fields: [workId], references: [id])
+
+  // 多页插画的页码，从 0 开始
+  pageIndex Int       @default(0)
+  // ORIGINAL 原图、PREVIEW 适中图、THUMB 缩略图
+  kind      AssetKind @default(ORIGINAL)
+
+  // 存储与访问
+  storageKey String // R2 对象键，如 p/illust/123/0/original.jpg
+  publicUrl  String // 经 CDN 的可访问 URL
+
+  width  Int
+  height Int
+  mime   String
+  bytes  Int
+
+  // 去重/占位
+  phash       String? // 感知哈希，做图片去重/相似图检测
+  dominantHex String? // 主色调
+
+  createdAt DateTime @default(now())
+
+  @@unique([workId, pageIndex, kind])
+  @@index([workId, pageIndex, kind])
+  @@index([phash])
+}
+
+// ---------- 标签（带别名，统一归到主标签） ----------
+model Tag {
+  id   String  @id @default(cuid())
+  name String  @unique // 平台“规范名”（中文优先）
+  kind TagKind @default(GENERAL)
+
+  // 同义词/别名：指向规范标签
+  aliasOfId String?
+  aliasOf   Tag?    @relation("Alias", fields: [aliasOfId], references: [id])
+  aliases   Tag[]   @relation("Alias")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  works WorkTag[]
+
+  // 原始 Pixiv 标签（用于回显/比对；可多条，放到关联表 TagExternal）
+  TagExternal TagExternal[]
+
+  @@index([aliasOfId])
+  @@index([kind])
+}
+
+// 作品—标签 多对多
+model WorkTag {
+  workId String
+  tagId  String
+  work   Work   @relation(fields: [workId], references: [id])
+  tag    Tag    @relation(fields: [tagId], references: [id])
+
+  // 保留加入时间，利于“按标签新增排序”
+  addedAt DateTime @default(now())
+
+  @@id([workId, tagId])
+  @@index([tagId])
+}
+
+// 保存 Pixiv 原始标签文本与罗马音等（若需要）
+model TagExternal {
+  id    String @id @default(cuid())
+  tagId String
+  tag   Tag    @relation(fields: [tagId], references: [id])
+
+  // 原始名与翻译（例如日文/假名/罗马音）
+  raw    String
+  locale String? // 'ja', 'en' 等
+  kind   String? // 官方/用户翻译
+
+  @@index([tagId])
+  @@index([raw])
+}
+
+// ---------- 图单（收藏者的歌单式组织，显式顺序） ----------
+model Collection {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  coverUrl    String?
+
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id])
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  items    CollectionItem[]
+  comments Comment[]
+
+  @@index([ownerId, createdAt])
+}
+
+model CollectionItem {
+  collectionId String
+  workId       String
+  position     Int      @default(0) // 排序
+  addedAt      DateTime @default(now())
+
+  collection Collection @relation(fields: [collectionId], references: [id])
+  work       Work       @relation(fields: [workId], references: [id])
+
+  @@id([collectionId, workId])
+  @@index([collectionId, position])
+  @@index([workId])
+}
+
+// ---------- 互动 ----------
+model Like {
+  userId    String
+  workId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  work Work @relation(fields: [workId], references: [id])
+
+  @@id([userId, workId])
+  @@index([workId])
+  @@map("Like")
+}
+
+// 保存用户的最近浏览记录
+model View {
+  userId       String
+  workId       String
+  lastViewedAt DateTime @default(now())
+  count        Int      @default(1)
+
+  user User @relation(fields: [userId], references: [id])
+  work Work @relation(fields: [workId], references: [id])
+
+  @@id([userId, workId])
+  @@index([lastViewedAt])
+}
+
+// ---------- 评论（线程化：rootId + parentId） ----------
+model Comment {
+  id String @id @default(cuid())
+
+  // 某个作品下的评论
+  workId String?
+  work   Work?   @relation(fields: [workId], references: [id])
+
+  // 某个图单下的评论
+  collectionId String?
+  collection   Collection? @relation(fields: [collectionId], references: [id])
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
+
+  rootId String?
+  root   Comment?  @relation("root", fields: [rootId], references: [id])
+  thread Comment[] @relation("root")
+
+  parentId String?
+  parent   Comment?  @relation("parent", fields: [parentId], references: [id])
+  children Comment[] @relation("parent")
+
+  content   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([workId, createdAt])
+  @@index([rootId])
+  @@index([parentId])
+}
