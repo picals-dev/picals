@@ -45,16 +45,18 @@ model User {
   coverUrl    String? // 个人空间头图
   bio         String?
   role        Role         @default(USER)
-  deletedAt   DateTime?
   collections Collection[] // 个人图单（收藏夹）
   comments    Comment[]
   likes       Like[] // 点赞
   views       View[] // 最近浏览
-  following   Follow[]     @relation("following")
-  followers   Follow[]     @relation("followers")
+
+  following Follow[] @relation("following")
+  followers Follow[] @relation("followers")
 
   sessions Session[]
   accounts Account[]
+
+  deletedAt DateTime?
 
   @@index([deletedAt])
   @@map("user")
@@ -120,6 +122,7 @@ model Follow {
 
   @@id([followerId, followingId])
   @@index([followingId])
+  @@map("follow")
 }
 
 model Artist {
@@ -141,6 +144,7 @@ model Artist {
 
   @@index([name])
   @@index([account])
+  @@map("artist")
 }
 
 model Work {
@@ -179,6 +183,7 @@ model Work {
   @@index([authorId])
   @@index([postedAt])
   @@index([isR18, postedAt])
+  @@map("work")
 }
 
 model Asset {
@@ -209,6 +214,7 @@ model Asset {
   @@unique([workId, pageIndex, kind])
   @@index([workId, pageIndex, kind])
   @@index([phash])
+  @@map("asset")
 }
 
 model Tag {
@@ -232,6 +238,7 @@ model Tag {
 
   @@index([aliasOfId])
   @@index([kind])
+  @@map("tag")
 }
 
 // 作品—标签 多对多
@@ -246,6 +253,7 @@ model WorkTag {
 
   @@id([workId, tagId])
   @@index([tagId])
+  @@map("work_tag")
 }
 
 // 保存 Pixiv 原始标签文本与罗马音等（若需要）
@@ -261,6 +269,7 @@ model TagExternal {
 
   @@index([tagId])
   @@index([raw])
+  @@map("tag_external")
 }
 
 model Collection {
@@ -280,6 +289,7 @@ model Collection {
   comments Comment[]
 
   @@index([ownerId, createdAt])
+  @@map("collection")
 }
 
 model CollectionItem {
@@ -294,6 +304,7 @@ model CollectionItem {
   @@id([collectionId, workId])
   @@index([collectionId, position])
   @@index([workId])
+  @@map("collection_item")
 }
 
 model Like {
@@ -306,7 +317,7 @@ model Like {
 
   @@id([userId, workId])
   @@index([workId])
-  @@map("Like")
+  @@map("like")
 }
 
 // 保存用户的最近浏览记录
@@ -321,6 +332,7 @@ model View {
 
   @@id([userId, workId])
   @@index([lastViewedAt])
+  @@map("view")
 }
 
 model Comment {
@@ -353,4 +365,5 @@ model Comment {
   @@index([workId, createdAt])
   @@index([rootId])
   @@index([parentId])
+  @@map("comment")
 }
