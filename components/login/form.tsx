@@ -54,7 +54,7 @@ export default function LoginForm() {
   }
 
   return (
-    <form className="flex w-80 flex-col gap-4">
+    <form className="flex w-full flex-col gap-4">
       <Controller
         name="name"
         control={control}
