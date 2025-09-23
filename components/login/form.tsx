@@ -1,40 +1,116 @@
 'use client'
 
-import { Button, Form, Input } from '@heroui/react'
-import { type FormEvent } from 'react'
+import { Button, Input } from '@heroui/react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useState } from 'react'
+import { Controller, useForm } from 'react-hook-form'
+import { toast } from 'react-hot-toast'
+import { z } from 'zod'
+
+import { useZodVerify } from '@/hooks/useZodVerify'
+import { authClient } from '@/lib/auth-client'
+import { loginSchema } from '@/validations/auth'
+
+type LoginSchema = z.infer<typeof loginSchema>
 
 export default function LoginForm() {
-  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  const [loading] = useState(false)
 
-    const data = Object.fromEntries(new FormData(e.currentTarget))
+  const { control, watch, reset } = useForm<LoginSchema>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      password: '',
+    },
+  })
 
-    console.log(data)
+  const handleSubmit = async () => {
+    const { success, errorList, result } = useZodVerify(loginSchema, watch())
+    if (!success) {
+      toast.error(errorList[0].message)
+      return
+    }
+    const { email, password, name } = result
+
+    await authClient.signUp.email(
+      {
+        email,
+        password,
+        name,
+      },
+      {
+        onSuccess: (ctx) => {
+          console.log(ctx)
+          toast.success('注册成功')
+          reset()
+        },
+        onError: (ctx) => {
+          toast.error(ctx.error.message)
+          reset()
+        },
+      },
+    )
   }
 
   return (
-    <Form className="w-full max-w-xs" onSubmit={onSubmit}>
-      <Input
-        isRequired
-        errorMessage="请输入有效的邮箱地址～"
-        label="Email"
-        labelPlacement="outside"
+    <form className="flex w-80 flex-col gap-4">
+      <Controller
+        name="name"
+        control={control}
+        render={({ field, formState: { errors } }) => (
+          <Input
+            {...field}
+            isRequired
+            label="用户名"
+            type="text"
+            variant="bordered"
+            autoComplete="name"
+            isInvalid={!!errors.name}
+            errorMessage={errors.name?.message}
+          />
+        )}
+      />
+      <Controller
         name="email"
-        placeholder="请输入你的邮箱"
-        type="email"
+        control={control}
+        render={({ field, formState: { errors } }) => (
+          <Input
+            {...field}
+            isRequired
+            label="邮箱"
+            type="email"
+            variant="bordered"
+            autoComplete="email"
+            isInvalid={!!errors.email}
+            errorMessage={errors.email?.message}
+          />
+        )}
       />
-      <Input
-        isRequired
-        errorMessage="请输入有效的密码～"
-        label="Password"
-        labelPlacement="outside"
+      <Controller
         name="password"
-        placeholder="请输入你的密码"
-        type="password"
+        control={control}
+        render={({ field, formState: { errors } }) => (
+          <Input
+            {...field}
+            isRequired
+            label="密码"
+            type="password"
+            variant="bordered"
+            isInvalid={!!errors.password}
+            autoComplete="current-password"
+            errorMessage={errors.password?.message}
+          />
+        )}
       />
-      <Button type="submit" variant="bordered">
+      <Button
+        color="primary"
+        isDisabled={loading}
+        isLoading={loading}
+        onPress={handleSubmit}
+      >
         登录
       </Button>
-    </Form>
+    </form>
   )
 }

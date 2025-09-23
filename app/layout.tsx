@@ -1,17 +1,18 @@
 import type { Metadata } from 'next'
 import { JetBrains_Mono, Noto_Sans_SC } from 'next/font/google'
+import { Toaster } from 'react-hot-toast'
+
+import { cn } from '@/utils/cn'
 
 import '../styles/globals.css'
 import { Providers } from './providers'
 
 const jetBrainsMono = JetBrains_Mono({
   variable: '--font-code',
-  subsets: ['latin'],
 })
 
 const notoSansSC = Noto_Sans_SC({
   variable: '--font-noto',
-  subsets: ['latin'],
 })
 
 export const metadata: Metadata = {
@@ -27,9 +28,17 @@ export default function RootLayout({
   return (
     <html lang="zh-Hans" suppressHydrationWarning>
       <body
-        className={`${notoSansSC.variable} ${jetBrainsMono.variable} antialiased`}
+        className={cn(
+          notoSansSC.variable,
+          jetBrainsMono.variable,
+          'antialiased',
+          'min-h-dvh',
+        )}
       >
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <Toaster />
+        </Providers>
       </body>
     </html>
   )
