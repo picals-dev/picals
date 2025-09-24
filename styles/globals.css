@@ -1,8 +1,8 @@
 @import './tailwind.css';
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: oklch(63.973% 0.17512 248.69 / 10%);
+  --foreground: var(--color-text);
 }
 
 @theme inline {
@@ -10,13 +10,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-noto);
   --font-mono: var(--font-code);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {

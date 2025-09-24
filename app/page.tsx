@@ -1,3 +1,3 @@
 export default function Home() {
-  return <div>Picals</div>
+  return <div className="aurora-bg"></div>
 }

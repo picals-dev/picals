@@ -28,11 +28,53 @@
   --color-error-3: oklch(0.66 0.217 24.44);
   --color-error-4: oklch(0.55 0.2051 24.53);
 
-  --color-text: oklch(0.16 0.0413 254.41 / 53.33%);
+  --color-text: oklch(0.26 0 0);
 
   --color-text-0: oklch(0.16 0.0413 254.41 / 53.33%);
   --color-text-1: oklch(0.57 0 0);
   --color-text-2: oklch(0.51 0 0);
   --color-text-3: oklch(0.42 0 0);
   --color-text-4: oklch(0.26 0 0);
+
+  --animate-move-aurora: move-aurora 30s ease-in-out infinite;
+
+  @keyframes move-aurora {
+    0% {
+      transform: rotate(0deg) scale(1);
+    }
+    50% {
+      transform: rotate(180deg) scale(1.05);
+    }
+    100% {
+      transform: rotate(360deg) scale(1);
+    }
+  }
+}
+
+@utility aurora-bg {
+  position: relative;
+  width: 100dvw;
+  height: 100dvh;
+  overflow: hidden;
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+
+    background-image:
+      radial-gradient(circle at 20% 30%, #0090f0 0%, transparent 35%),
+      radial-gradient(circle at 75% 25%, #6fd3f5 0%, transparent 30%),
+      radial-gradient(circle at 40% 70%, #8ed1c6 0%, transparent 35%),
+      radial-gradient(circle at 80% 75%, #c9a7eb 0%, transparent 35%),
+      radial-gradient(circle at 30% 85%, #ffd1dc 0%, transparent 35%);
+
+    filter: blur(120px);
+    opacity: 0.7;
+
+    animation: var(--animate-move-aurora);
+    z-index: -1;
+  }
 }
