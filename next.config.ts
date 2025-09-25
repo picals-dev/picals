@@ -5,6 +5,10 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
+        hostname: 'static-r2.caelum.moe',
+      },
+      {
+        protocol: 'https',
         hostname: 'pixiv-r2.caelum.moe',
       },
     ],
