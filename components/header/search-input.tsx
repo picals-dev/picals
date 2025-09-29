@@ -1,6 +1,15 @@
 'use client'
 
-import { Input, Kbd, useDisclosure } from '@heroui/react'
+import {
+  Button,
+  Input,
+  Kbd,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalHeader,
+  useDisclosure,
+} from '@heroui/react'
 import { SearchIcon } from 'lucide-react'
 
 export default function SearchInput() {
@@ -8,23 +17,31 @@ export default function SearchInput() {
 
   return (
     <>
-      <div className="z-20 w-80">
-        <Input
-          variant="bordered"
-          placeholder="搜索"
-          startContent={<SearchIcon className="text-text-0" />}
-          endContent={<Kbd keys={['command']}>K</Kbd>}
-          onFocus={onOpen}
-        />
-      </div>
-      {isOpen && (
-        <>
-          <div className="z-20 rounded-2xl bg-white p-4">
-            <p>这是一段内容。</p>
-          </div>
-          <div className="fixed z-10 size-dvh bg-black/50" onClick={onClose} />
-        </>
-      )}
+      <Button
+        variant="bordered"
+        radius="full"
+        startContent={<SearchIcon className="text-text-0" />}
+        endContent={<Kbd keys={['command']}>K</Kbd>}
+        className="text-text-0"
+        onPress={onOpen}
+      >
+        搜索
+      </Button>
+      <Modal isOpen={isOpen} onClose={onClose} hideCloseButton>
+        <ModalContent>
+          <ModalHeader>
+            <Input
+              variant="underlined"
+              placeholder="搜索"
+              startContent={<SearchIcon className="text-text-0" />}
+              onFocus={onOpen}
+            />
+          </ModalHeader>
+          <ModalBody>
+            <p>搜索结果</p>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </>
   )
 }
