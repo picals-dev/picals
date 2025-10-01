@@ -13,14 +13,14 @@
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
+  "[prisma]": {
+    "editor.defaultFormatter": "Prisma.prisma"
+  },
   "eslint.validate": [
     "javascript",
     "typescript",
     "javascriptreact",
     "typescriptreact"
   ],
-  "css.customData": [".vscode/tailwind.json"],
-  "[prisma]": {
-    "editor.defaultFormatter": "Prisma.prisma"
-  }
+  "css.customData": [".vscode/tailwind.json"]
 }
