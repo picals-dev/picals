@@ -2,7 +2,7 @@
 
 import { Button, Input } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useState } from 'react'
+import { useTransition } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { toast } from 'react-hot-toast'
 import { z } from 'zod'
@@ -14,7 +14,7 @@ import { loginSchema } from '@/validations/auth'
 type LoginSchema = z.infer<typeof loginSchema>
 
 export default function LoginForm() {
-  const [loading] = useState(false)
+  const [loading, startLogin] = useTransition()
 
   const { control, watch, reset } = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
@@ -25,33 +25,34 @@ export default function LoginForm() {
     },
   })
 
-  const handleSubmit = async () => {
-    const { success, errorList, result } = useZodVerify(loginSchema, watch())
-    if (!success) {
-      toast.error(errorList[0].message)
-      return
-    }
-    const { email, password, name } = result
+  const handleSubmit = () =>
+    startLogin(async () => {
+      const { success, errorList, result } = useZodVerify(loginSchema, watch())
+      if (!success) {
+        toast.error(errorList[0].message)
+        return
+      }
+      const { email, password, name } = result
 
-    await authClient.signUp.email(
-      {
-        email,
-        password,
-        name,
-      },
-      {
-        onSuccess: (ctx) => {
-          console.log(ctx)
-          toast.success('注册成功')
-          reset()
+      await authClient.signUp.email(
+        {
+          email,
+          password,
+          name,
         },
-        onError: (ctx) => {
-          toast.error(ctx.error.message)
-          reset()
+        {
+          onSuccess: (ctx) => {
+            console.log(ctx)
+            toast.success('注册成功')
+            reset()
+          },
+          onError: (ctx) => {
+            toast.error(ctx.error.message)
+            reset()
+          },
         },
-      },
-    )
-  }
+      )
+    })
 
   return (
     <form className="flex w-full flex-col gap-4">

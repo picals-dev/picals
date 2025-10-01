@@ -3,9 +3,9 @@ import { JetBrains_Mono, Noto_Sans_SC } from 'next/font/google'
 import { Toaster } from 'react-hot-toast'
 
 import Header from '@/components/header'
+import '@/styles/globals.css'
 import { cn } from '@/utils/cn'
 
-import '../styles/globals.css'
 import { Providers } from './providers'
 
 const jetBrainsMono = JetBrains_Mono({

@@ -1,13 +1,21 @@
 'use client'
 
-import { Image, Input, Kbd } from '@heroui/react'
-import { SearchIcon } from 'lucide-react'
+import { Image } from '@heroui/react'
 import NextImage from 'next/image'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+
+import { HEADER_HIDDEN_PATHNAMES } from '@/constants/pathname'
 
 import SearchInput from './search-input'
 
 export default function Header() {
+  const pathname = usePathname()
+
+  if (HEADER_HIDDEN_PATHNAMES.includes(pathname)) {
+    return null
+  }
+
   return (
     <header className="fixed top-0 right-0 left-0 z-50 h-16 w-full bg-white/80 shadow-md backdrop-blur">
       <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-4">
